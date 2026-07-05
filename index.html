@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Shippori+Mincho:wght@600;800&family=Noto+Sans+JP:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://pecpec37-gift.github.io/portal/stamp.js"></script>
+<script src="https://pecpec37-gift.github.io/portal/battle.js"></script>
 <style>
 :root{
   --bg:#13110d;--bg2:#1b1813;--surface:#252019;--surface2:#322b20;
@@ -269,7 +270,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
     <div class="result-actions">
-      <button class="result-btn result-btn-primary" onclick="retryGame()">もう一度挑戦</button>
+      <button class="result-btn result-btn-primary" id="battle-result-btn" style="display:none;background:linear-gradient(135deg,#be123c,#7c1d3a);" onclick="goBattleResult()">🏆 対戦結果を見る（ポータルへ）</button>
+      <button class="result-btn result-btn-primary" id="normal-retry-btn" onclick="retryGame()">もう一度挑戦</button>
       <button class="result-btn result-btn-secondary" onclick="showScreen('screen-top')">← トップへ</button>
     </div>
     <a class="portal-back" href="https://pecpec37-gift.github.io/portal/">← とみやんのゲームランド（ポータルサイトに戻る）</a>
@@ -509,6 +511,15 @@ function endGame(reason){
     try{TomyStamp.send(STAMP_GAME_ID,currentGenre.name,pairs).then(r=>{if(r&&r.ok)showToast('⭐ スタンプ送信！ランキングに反映されます');}).catch(()=>{});}catch(e){}
   }
 
+  // 対戦モード：スコアをポータルへ送信し、対戦結果ボタンを表示
+  if(window.__BATTLE&&window.__BATTLE.active&&window.TomyBattle){
+    try{ TomyBattle.submitScore(window.__BATTLE.matchId,total,pairs); }catch(e){}
+    var _brb=document.getElementById('battle-result-btn');
+    var _nrb=document.getElementById('normal-retry-btn');
+    if(_brb)_brb.style.display='';
+    if(_nrb)_nrb.style.display='none';
+  }
+
   showScreen('screen-result');
   if(hanamaru)setTimeout(()=>showToast('🌸 花丸スタンプ獲得！おめでとう！'),400);
 }
@@ -592,6 +603,52 @@ function deleteRanking(){
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
 buildGenreCards();
+
+/* ===== 対戦モード（ポータルから ?battle=1 で遷移してくる） ===== */
+window.__BATTLE=null;
+function goBattleResult(){
+  var mid=(window.__BATTLE&&window.__BATTLE.matchId)||'';
+  location.href='https://pecpec37-gift.github.io/portal/?battleResult='+encodeURIComponent(mid);
+}
+(function(){
+  var p; try{ p=new URLSearchParams(location.search); }catch(e){ return; }
+  if(p.get('battle')!=='1') return;
+  var matchId=p.get('match'), genreId=p.get('genre'), nm=p.get('name');
+  if(!matchId) return;
+  window.__BATTLE={active:true,matchId:matchId};
+  if(nm && window.TomyBattle){ try{ TomyBattle.setName(nm); }catch(e){} }
+  playerName = nm || (window.TomyBattle && TomyBattle.getName()) || 'プレーヤー';
+  var g=GENRES.find(function(x){return x.id===genreId;}) || GENRES[Math.floor(Math.random()*GENRES.length)];
+  currentGenre=g;
+  var ov=document.getElementById('bt-go-overlay');
+  var num=document.getElementById('bt-go-num');
+  var info=document.getElementById('bt-go-info');
+  info.textContent=g.icon+' '+g.name+' で対戦！';
+  ov.classList.add('show');
+  var n=3; num.textContent=n;
+  var t=setInterval(function(){
+    n--;
+    if(n<=0){
+      clearInterval(t);
+      ov.classList.remove('show');
+      var ni=document.getElementById('name-input'); if(ni)ni.value=playerName;
+      startGame();
+    } else { num.textContent=n; }
+  },1000);
+})();
 </script>
+<style>
+#bt-go-overlay{position:fixed;inset:0;z-index:9999;background:rgba(20,17,15,.96);color:#faf8f3;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}
+#bt-go-overlay.show{display:flex;}
+#bt-go-info{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:22px;margin-bottom:20px;color:#f4d06a;}
+#bt-go-num{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:96px;line-height:1;color:#fff;animation:btgo 1s infinite;}
+#bt-go-label{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:.2em;color:rgba(250,248,243,.6);margin-top:16px;}
+@keyframes btgo{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.15);opacity:.65;}}
+</style>
+<div id="bt-go-overlay">
+  <div id="bt-go-info"></div>
+  <div id="bt-go-num">3</div>
+  <div id="bt-go-label">対戦スタートまで…</div>
+</div>
 </body>
 </html>
