@@ -513,7 +513,7 @@ function endGame(reason){
 
   // 対戦モード：スコアをポータルへ送信し、対戦結果ボタンを表示
   if(window.__BATTLE&&window.__BATTLE.active&&window.TomyBattle){
-    try{ TomyBattle.submitScore(window.__BATTLE.matchId,total,pairs); }catch(e){}
+    try{ TomyBattle.submitScore(window.__BATTLE.matchId,total,pairs+'/10組そろえた'); }catch(e){}
     var _brb=document.getElementById('battle-result-btn');
     var _nrb=document.getElementById('normal-retry-btn');
     if(_brb)_brb.style.display='';
