@@ -629,7 +629,7 @@ function __initBattle(){
   var info=document.getElementById('bt-go-info');
   // オーバーレイが無くてもゲームは必ず開始する（保険）
   if(!ov||!num||!info){ beginBattle(); return; }
-  info.textContent=g.icon+' '+g.name+' で対戦！';
+  info.textContent='🃏 神経衰弱道場で対戦！';
   ov.classList.add('show');
   var n=3; num.textContent=n;
   var t=setInterval(function(){
