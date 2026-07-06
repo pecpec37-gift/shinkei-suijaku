@@ -610,7 +610,7 @@ function goBattleResult(){
   var mid=(window.__BATTLE&&window.__BATTLE.matchId)||'';
   location.href='https://pecpec37-gift.github.io/portal/?battleResult='+encodeURIComponent(mid);
 }
-(function(){
+function __initBattle(){
   var p; try{ p=new URLSearchParams(location.search); }catch(e){ return; }
   if(p.get('battle')!=='1') return;
   var matchId=p.get('match'), genreId=p.get('genre'), nm=p.get('name');
@@ -620,9 +620,15 @@ function goBattleResult(){
   playerName = nm || (window.TomyBattle && TomyBattle.getName()) || 'プレーヤー';
   var g=GENRES.find(function(x){return x.id===genreId;}) || GENRES[Math.floor(Math.random()*GENRES.length)];
   currentGenre=g;
+  function beginBattle(){
+    var ni=document.getElementById('name-input'); if(ni)ni.value=playerName;
+    startGame();
+  }
   var ov=document.getElementById('bt-go-overlay');
   var num=document.getElementById('bt-go-num');
   var info=document.getElementById('bt-go-info');
+  // オーバーレイが無くてもゲームは必ず開始する（保険）
+  if(!ov||!num||!info){ beginBattle(); return; }
   info.textContent=g.icon+' '+g.name+' で対戦！';
   ov.classList.add('show');
   var n=3; num.textContent=n;
@@ -631,11 +637,13 @@ function goBattleResult(){
     if(n<=0){
       clearInterval(t);
       ov.classList.remove('show');
-      var ni=document.getElementById('name-input'); if(ni)ni.value=playerName;
-      startGame();
+      beginBattle();
     } else { num.textContent=n; }
   },1000);
-})();
+}
+// DOM構築完了後に実行（オーバーレイ要素はこのスクリプトより後ろにあるため）
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__initBattle); }
+else { __initBattle(); }
 </script>
 <style>
 #bt-go-overlay{position:fixed;inset:0;z-index:9999;background:rgba(20,17,15,.96);color:#faf8f3;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}
