@@ -64,6 +64,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .intro-desc{font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.7;}
 .intro-rule{font-size:12px;line-height:1.9;color:var(--text2);text-align:left;background:rgba(192,57,43,0.06);border-radius:6px;padding:12px 14px;margin-bottom:20px;}
 .intro-rule strong{color:var(--gold3);}
+/* スタート前に絶対読ませたい注意（重要2点） */
+.intro-alert{background:rgba(192,57,43,0.12);border:1.5px solid var(--crimson);border-radius:8px;padding:14px 14px 4px;margin-bottom:14px;text-align:left;box-shadow:0 0 18px rgba(192,57,43,0.15);}
+.intro-alert-title{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:13px;color:var(--red3);letter-spacing:0.04em;margin-bottom:10px;text-align:center;}
+.intro-alert-line{display:flex;gap:10px;align-items:flex-start;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:13.5px;line-height:1.55;color:var(--text);margin-bottom:10px;}
+.ia-icon{font-size:22px;line-height:1.2;flex-shrink:0;}
+.intro-alert-line b{color:var(--gold3);font-weight:900;}
+.intro-alert-line em{color:var(--red3);font-style:normal;font-weight:900;}
 .name-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.18em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;text-align:left;}
 .name-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;margin-bottom:16px;outline:none;transition:border-color 0.15s;}
 .name-input:focus{border-color:var(--red2);}
@@ -211,7 +218,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <span class="intro-icon" id="intro-icon"></span>
     <div class="intro-name" id="intro-name"></div>
     <div class="intro-desc" id="intro-desc"></div>
-    <div class="intro-rule">制限時間：<strong>60秒</strong>（記憶の時間も含む）<br>👀 全カードを覚えたら「覚えた」で裏返し<br>✅ ペア成立 → <strong>+10点 ＋ 時間+5秒</strong><br>❌ ハズレ → 減点なし ＋ 時間−5秒<br>🏆 残り時間がそのままボーナス点に！</div>
+    <div class="intro-alert">
+      <div class="intro-alert-title">⚠️ 開始前に必ずチェック！</div>
+      <div class="intro-alert-line"><span class="ia-icon">⏱</span><span>制限時間は<b>60秒</b>だけ。<em>記憶の時間もこの60秒に含まれます！</em></span></div>
+      <div class="intro-alert-line"><span class="ia-icon">👀</span><span>全カードを覚えたら<b>「覚えた」ボタン</b>で裏返してスタート！</span></div>
+    </div>
+    <div class="intro-rule">✅ ペア成立 → <strong>+10点 ＋ 時間+5秒</strong><br>❌ ハズレ → 減点なし ＋ 時間−5秒<br>🏆 残り時間がそのままボーナス点に！</div>
     <div class="name-label">// Your Name（ランキングに表示）</div>
     <input class="name-input" id="name-input" type="text" maxlength="20" placeholder="プレーヤー名（任意）">
     <button class="start-btn" onclick="startGame()">🎴 ゲーム開始 ▶</button>
@@ -385,7 +397,19 @@ function startGame(){
   setFeedback('👀 配置を覚えよう！（タイマーは進行中）','info');
   showScreen('screen-game');
   setTimeout(layoutBoard,60);
-  startTimer();
+  showMemoHint(startTimer);   // スタート直前に注意を再表示 → 閉じたらタイマー開始
+}
+
+/* ---------- スタート直前リマインド（注意の再表示・約1.8秒） ---------- */
+function showMemoHint(done){
+  const ov=document.getElementById('memo-hint-overlay');
+  if(!ov){ done&&done(); return; }   // 要素が無くても必ずゲーム開始（保険）
+  ov.classList.add('show');
+  clearTimeout(showMemoHint._t);
+  showMemoHint._t=setTimeout(()=>{
+    ov.classList.remove('show');
+    done&&done();
+  },1800);
 }
 
 /* ---------- タイマー ---------- */
@@ -652,11 +676,31 @@ else { __initBattle(); }
 #bt-go-num{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:96px;line-height:1;color:#fff;animation:btgo 1s infinite;}
 #bt-go-label{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:.2em;color:rgba(250,248,243,.6);margin-top:16px;}
 @keyframes btgo{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.15);opacity:.65;}}
+/* スタート直前のリマインド・オーバーレイ */
+#memo-hint-overlay{position:fixed;inset:0;z-index:9998;background:rgba(11,9,6,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .25s;}
+#memo-hint-overlay.show{display:flex;opacity:1;}
+.mh-card{background:#252019;border:1.5px solid #d9533f;border-radius:12px;padding:24px 22px;max-width:380px;width:100%;text-align:left;box-shadow:0 14px 44px rgba(0,0,0,.6),0 0 30px rgba(192,57,43,.22);animation:mhIn .38s cubic-bezier(.175,.885,.32,1.4);}
+@keyframes mhIn{0%{transform:scale(.85);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.mh-badge{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.22em;color:#f4d06a;text-transform:uppercase;text-align:center;margin-bottom:16px;}
+.mh-line{display:flex;gap:12px;align-items:flex-start;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:15px;line-height:1.55;color:#f5efe2;}
+.mh-line+.mh-line{margin-top:14px;padding-top:14px;border-top:1px solid rgba(201,162,39,.2);}
+.mh-icon{font-size:26px;line-height:1.15;flex-shrink:0;}
+.mh-line b{color:#ecc94b;font-weight:900;}
+.mh-line em{color:#e8a99c;font-style:normal;font-weight:900;}
 </style>
 <div id="bt-go-overlay">
   <div id="bt-go-info"></div>
   <div id="bt-go-num">3</div>
   <div id="bt-go-label">対戦スタートまで…</div>
+</div>
+
+<!-- スタート直前のリマインド（重要2点だけ再表示） -->
+<div id="memo-hint-overlay">
+  <div class="mh-card">
+    <div class="mh-badge">まもなくスタート</div>
+    <div class="mh-line"><span class="mh-icon">⏱</span><span>制限時間は <b>60秒</b> だけ。<br><em>記憶の時間もこの60秒に含まれます！</em></span></div>
+    <div class="mh-line"><span class="mh-icon">👀</span><span>全カードを覚えたら<br><b>「覚えた」</b>で裏返してスタート！</span></div>
+  </div>
 </div>
 </body>
 </html>
